@@ -125,17 +125,18 @@ export default function App() {
     if (!tiktokUrl.trim()) return;
     setExtracting(true); setExtracted([]);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const GEMINI_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+      const prompt = `Tu es un assistant voyage. À partir de ce lien TikTok: ${tiktokUrl}\n\nAnalyse l'URL et génère 2-3 lieux de voyage réalistes en Asie (Indonésie, Japon, Corée, Chine du Sud, ou Vietnam) qui pourraient être montrés dans cette vidéo.\n\nRéponds UNIQUEMENT avec du JSON valide, sans texte avant ou après, sans backticks:\n{"places":[{"name":"nom du lieu","country":"pays","city":"ville","category":"Culture|Food|Nature|Ville|Activité|Hébergement","lat":0.0,"lng":0.0,"note":"description courte","priority":"must|normal"}]}`;
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514", max_tokens: 1000,
-          messages: [{ role: "user", content: `URL: ${tiktokUrl}\nGénère 2-3 lieux réalistes d'une vidéo voyage Asie (Indonésie, Japon, Corée, Chine Sud, Vietnam). JSON uniquement sans backticks:\n{"places":[{"name":"","country":"","city":"","category":"Culture|Food|Nature|Ville|Activité|Hébergement","lat":0,"lng":0,"note":"","priority":"must|normal"}]}` }]
-        })
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
       const data = await res.json();
-      const parsed = JSON.parse(data.content?.[0]?.text.replace(/```json|```/g, "").trim() || "{}");
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      const clean = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
       setExtracted(parsed.places || []);
-    } catch { setExtracted([]); }
+    } catch (e) { console.error(e); setExtracted([]); }
     setExtracting(false);
   };
 
@@ -176,15 +177,15 @@ export default function App() {
     const placesList = places.map(p => `- ${p.name} (${p.country}) ${p.priority === "must" ? "⭐" : ""}`).join("\n");
     const resList = reservations.map(r => `- ${r.type}: ${r.name} le ${r.date}`).join("\n");
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const GEMINI_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+      const prompt = `Tu es un assistant voyage expert Asie. Trip 4 mois mi-sept→mi-janv : Indonésie→Japon→Corée→Chine Sud→Vietnam.\nLieux sauvegardés:\n${placesList}\nRéservations:\n${resList}\nQuestion: ${msg}\nRéponds en français, concis et pratique.`;
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514", max_tokens: 1000,
-          messages: [{ role: "user", content: `Assistant voyage expert Asie. Trip 4 mois mi-sept→mi-janv : Indonésie→Japon→Corée→Chine Sud→Vietnam.\nLieux:\n${placesList}\nRéservations:\n${resList}\nQuestion: ${msg}\nRéponds en français, concis et pratique.` }]
-        })
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
       const data = await res.json();
-      setChat(prev => [...prev, { role: "ai", text: data.content?.[0]?.text || "Erreur." }]);
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur.";
+      setChat(prev => [...prev, { role: "ai", text }]);
     } catch { setChat(prev => [...prev, { role: "ai", text: "Erreur de connexion." }]); }
     setChatLoading(false);
   };
