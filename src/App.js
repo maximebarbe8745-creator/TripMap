@@ -127,7 +127,7 @@ export default function App() {
     try {
       const GEMINI_KEY = process.env.REACT_APP_GEMINI_API_KEY;
       const prompt = `Tu es un assistant voyage. À partir de ce lien TikTok: ${tiktokUrl}\n\nAnalyse l'URL et génère 2-3 lieux de voyage réalistes en Asie (Indonésie, Japon, Corée, Chine du Sud, ou Vietnam) qui pourraient être montrés dans cette vidéo.\n\nRéponds UNIQUEMENT avec du JSON valide, sans texte avant ou après, sans backticks:\n{"places":[{"name":"nom du lieu","country":"pays","city":"ville","category":"Culture|Food|Nature|Ville|Activité|Hébergement","lat":0.0,"lng":0.0,"note":"description courte","priority":"must|normal"}]}`;
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
@@ -179,7 +179,7 @@ export default function App() {
     try {
       const GEMINI_KEY = process.env.REACT_APP_GEMINI_API_KEY;
       const prompt = `Tu es un assistant voyage expert Asie. Trip 4 mois mi-sept→mi-janv : Indonésie→Japon→Corée→Chine Sud→Vietnam.\nLieux sauvegardés:\n${placesList}\nRéservations:\n${resList}\nQuestion: ${msg}\nRéponds en français, concis et pratique.`;
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
